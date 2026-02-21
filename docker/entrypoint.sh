@@ -10,8 +10,8 @@ php artisan config:clear 2>&1 || true
 echo "==> Caching config..."
 php artisan config:cache 2>&1 || true
 
-echo "==> Running migrations (timeout 30s)..."
-timeout 30 php artisan migrate --force 2>&1 || echo "WARNING: Migration skipped or failed"
+echo "==> Running migrations in background..."
+(timeout 60 php artisan migrate --force 2>&1 | sed 's/^/[migrate] /') &
 
 echo "==> Starting server on port ${PORT:-8000}..."
 exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
