@@ -1,0 +1,59 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: elmo-note-postgres
+    environment:
+      POSTGRES_DB: elmo_note
+      POSTGRES_USER: elmo
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - elmo-network
+
+  backend:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: elmo-note-backend
+    working_dir: /var/www/backend
+    volumes:
+      - ./backend:/var/www/backend
+    depends_on:
+      - postgres
+    networks:
+      - elmo-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: elmo-note-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www/backend
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+    networks:
+      - elmo-network
+
+  frontend:
+    image: node:22-alpine
+    container_name: elmo-note-frontend
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host"
+    networks:
+      - elmo-network
+
+volumes:
+  postgres_data:
+
+networks:
+  elmo-network:
+    driver: bridge

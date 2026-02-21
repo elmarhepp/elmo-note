@@ -1,0 +1,45 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg: #f5f4ef;
+  --color-sidebar: #2d2d2d;
+  --color-sidebar-text: #e8e8e8;
+  --color-sidebar-hover: #3d3d3d;
+  --color-sidebar-active: #4a9e6b;
+  --color-border: #e0ddd5;
+  --color-text: #1a1a1a;
+  --color-text-muted: #888;
+  --color-accent: #4a9e6b;
+  --color-accent-hover: #3a8a5a;
+  --color-white: #ffffff;
+  --color-list-bg: #faf9f5;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+#app {
+  height: 100vh;
+  display: flex;
+}
+
+input, textarea, button {
+  font-family: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
