@@ -9,12 +9,15 @@ nixPkgs = [
   "php84Extensions.gd",
   "php84Extensions.tokenizer",
   "php84Extensions.curl",
-  "php84Extensions.fileinfo",
-  "composer"
+  "php84Extensions.fileinfo"
 ]
+aptPkgs = ["curl"]
 
 [phases.install]
-cmds = ["cd backend && composer install --no-dev --optimize-autoloader"]
+cmds = [
+  "curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer",
+  "cd backend && composer install --no-dev --optimize-autoloader"
+]
 
 [start]
 cmd = "echo NIXPACKS_START && php backend/artisan config:clear || true && php backend/artisan migrate --force & php backend/artisan serve --host=0.0.0.0 --port=${PORT:-8000} --working-path=backend"
