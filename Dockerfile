@@ -25,7 +25,4 @@ RUN composer install --no-dev --optimize-autoloader
 
 EXPOSE 8000
 
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-CMD ["/entrypoint.sh"]
+CMD ["/bin/sh", "-c", "echo CONTAINER_STARTED && php artisan migrate --force & php artisan serve --host=0.0.0.0 --port=8000"]
