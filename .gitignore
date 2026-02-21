@@ -14,6 +14,9 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env.local
 
+# Built frontend (track backend/public/spa/ in git for Railway deployment)
+# To update: cd frontend && npm run build && cp -r dist/* ../backend/public/spa/
+
 # OS
 .DS_Store
 Thumbs.db
