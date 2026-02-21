@@ -10,11 +10,17 @@ nixPkgs = [
   "php84Extensions.tokenizer",
   "php84Extensions.curl",
   "php84Extensions.fileinfo",
-  "composer"
+  "composer",
+  "nodejs_20",
+  "nodePackages.npm"
 ]
 
 [phases.install]
-cmds = ["cd backend && composer install --no-dev --optimize-autoloader"]
+cmds = [
+  "cd frontend && npm install && npm run build",
+  "cp -r frontend/dist backend/public/spa",
+  "cd backend && composer install --no-dev --optimize-autoloader"
+]
 
 [start]
 cmd = "bash start.sh"
