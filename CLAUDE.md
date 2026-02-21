@@ -1,15 +1,25 @@
 # elmo-note
 
-Evernote-ähnliche Notiz-App. Monorepo mit losem Frontend/Backend-Coupling.
+Evernote-ähnliche Notiz-App. Monorepo — Laravel serviert das Vue-Frontend mit aus.
 
 ## Stack
 
-- **Frontend**: Vue 3 + Vite + Pinia + Vue Router + Tiptap — läuft auf Port 5173
-- **Backend**: Laravel 11 + Laravel Sanctum (Bearer Token) — läuft auf Port 8000 via nginx
+- **Frontend**: Vue 3 + Vite + Pinia + Vue Router + Tiptap — läuft auf Port 5173 (dev)
+- **Backend**: Laravel 11 + Laravel Sanctum (Bearer Token) — läuft auf Port 8000
 - **Datenbank**: PostgreSQL 16 — läuft auf Port 5432
 - **Auth**: Token-basiert (kein Cookie/CSRF) — Token wird in `localStorage` gespeichert
 
-## Docker
+## Deployment-Architektur
+
+In **Production** serviert Laravel alles:
+- `GET /api/*` → Laravel API
+- `GET /*` → Vue SPA (`public/spa/index.html`) via Catch-All Route in `web.php`
+
+Das Dockerfile ist ein Multi-Stage-Build:
+1. Node 20 baut das Vue-Frontend (`npm run build`)
+2. PHP 8.4 installiert Laravel-Dependencies + kopiert Vue-`dist/` nach `public/spa/`
+
+## Docker (lokal)
 
 ```bash
 docker compose up -d          # alle Services starten
@@ -36,9 +46,10 @@ elmo-note/
 │   ├── app/
 │   │   ├── Http/Controllers/ # AuthController, NoteController, NotebookController, TagController, SearchController
 │   │   ├── Models/           # User, Note, Notebook, Tag
-│   │   └── Policies/         # nicht verwendet (abort_unless direkt in Controllern)
 │   ├── database/migrations/
-│   ├── routes/api.php
+│   ├── routes/
+│   │   ├── api.php           # API-Routen
+│   │   └── web.php           # Catch-All → Vue SPA
 │   └── .env                  # DB_HOST=postgres, TOKEN-Auth, SESSION_DRIVER=cookie
 │
 ├── frontend/                 # Vue 3 + Vite
@@ -49,12 +60,15 @@ elmo-note/
 │   │   ├── router/index.js   # Vue Router mit Auth Guards
 │   │   ├── views/            # LoginView, RegisterView, AppView
 │   │   └── components/       # Sidebar, NoteList, TiptapEditor
-│   └── .env                  # VITE_API_URL=http://localhost:8000/api
+│   ├── .env                  # VITE_API_URL=http://localhost:8000/api (nur lokal)
+│   └── .env.production       # VITE_API_URL= (leer → /api relativ, same-origin)
 │
 ├── docker/
-│   ├── php/Dockerfile        # PHP 8.4-fpm-alpine + pdo_pgsql
-│   └── nginx/default.conf    # Laravel FastCGI zu backend:9000
-└── docker-compose.yml
+│   ├── entrypoint.sh         # config:cache, migrate, php artisan serve
+│   └── nginx/default.conf    # für lokale Docker-Compose (nginx + php-fpm)
+├── Dockerfile                # Multi-Stage: Node → PHP (für Railway)
+├── railway.json              # Railway: Dockerfile-Builder
+└── docker-compose.yml        # Lokale Entwicklung: 4 Services
 ```
 
 ## API-Routen
@@ -92,39 +106,29 @@ GET    /api/search?q=         (auth:sanctum)  — PostgreSQL TSVECTOR Volltextsu
 - **Volltextsuche**: Scope `Note::scopeSearch()` nutzt PostgreSQL `plainto_tsquery` — funktioniert nur mit PostgreSQL.
 - **Auto-Save**: Frontend speichert Notizinhalt automatisch 1,2s nach dem letzten Tastendruck.
 
-## Deployment (Railway)
+## Deployment (Railway) — Ein Service
 
-Monorepo → in Railway **zwei separate Services** anlegen, jeweils mit eigenem Root Directory.
+Ein einziges Railway-Projekt mit einem Service + PostgreSQL-Plugin.
 
-### Setup-Schritte
+### Setup
 
 1. Railway Projekt erstellen → "Add Service" → "GitHub Repo"
-2. **Backend-Service**: Root Directory = `backend`
-3. **Frontend-Service**: Root Directory = `frontend`
-4. **PostgreSQL-Service**: Railway Plugin "PostgreSQL" hinzufügen
+2. Root Directory: leer lassen (Repo-Root)
+3. Railway erkennt `railway.json` → nutzt `Dockerfile`
+4. "Add Service" → "Database" → PostgreSQL hinzufügen
 
-### Backend Environment Variables
+### Environment Variables (Railway Service)
 
 ```
 APP_KEY=           # php artisan key:generate --show
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=           # Railway-URL des Backend-Service
-DB_HOST=           # aus Railway PostgreSQL Plugin
+APP_URL=           # https://deine-url.railway.app
+DB_HOST=           # aus Railway PostgreSQL Plugin (${{Postgres.PGHOST}})
 DB_PORT=5432
-DB_DATABASE=       # aus Railway PostgreSQL Plugin
-DB_USERNAME=       # aus Railway PostgreSQL Plugin
-DB_PASSWORD=       # aus Railway PostgreSQL Plugin
-SANCTUM_STATEFUL_DOMAINS=  # Frontend-Domain (ohne https://)
-FRONTEND_URL=      # https://your-frontend.railway.app
+DB_DATABASE=       # aus Railway PostgreSQL Plugin (${{Postgres.PGDATABASE}})
+DB_USERNAME=       # aus Railway PostgreSQL Plugin (${{Postgres.PGUSER}})
+DB_PASSWORD=       # aus Railway PostgreSQL Plugin (${{Postgres.PGPASSWORD}})
 ```
 
-### Frontend Environment Variables
-
-```
-VITE_API_URL=https://your-backend.railway.app/api
-```
-
-### Konfigurationsdateien
-- `backend/railway.json` + `backend/nixpacks.toml` — PHP 8.4 Build + Migrate on Deploy
-- `frontend/railway.json` — Node Build + Static Serve
+Kein `VITE_API_URL` nötig — Frontend und Backend laufen unter derselben URL.
