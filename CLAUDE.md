@@ -92,9 +92,39 @@ GET    /api/search?q=         (auth:sanctum)  — PostgreSQL TSVECTOR Volltextsu
 - **Volltextsuche**: Scope `Note::scopeSearch()` nutzt PostgreSQL `plainto_tsquery` — funktioniert nur mit PostgreSQL.
 - **Auto-Save**: Frontend speichert Notizinhalt automatisch 1,2s nach dem letzten Tastendruck.
 
-## Deployment (Railway / Render)
+## Deployment (Railway)
 
-- Datenbank: PostgreSQL (Render/Railway nativ, MySQL nicht empfohlen)
-- `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` aus Plattform-Env-Vars setzen
-- `APP_URL` und `FRONTEND_URL` anpassen
-- `SANCTUM_STATEFUL_DOMAINS` auf die Frontend-Domain setzen
+Monorepo → in Railway **zwei separate Services** anlegen, jeweils mit eigenem Root Directory.
+
+### Setup-Schritte
+
+1. Railway Projekt erstellen → "Add Service" → "GitHub Repo"
+2. **Backend-Service**: Root Directory = `backend`
+3. **Frontend-Service**: Root Directory = `frontend`
+4. **PostgreSQL-Service**: Railway Plugin "PostgreSQL" hinzufügen
+
+### Backend Environment Variables
+
+```
+APP_KEY=           # php artisan key:generate --show
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=           # Railway-URL des Backend-Service
+DB_HOST=           # aus Railway PostgreSQL Plugin
+DB_PORT=5432
+DB_DATABASE=       # aus Railway PostgreSQL Plugin
+DB_USERNAME=       # aus Railway PostgreSQL Plugin
+DB_PASSWORD=       # aus Railway PostgreSQL Plugin
+SANCTUM_STATEFUL_DOMAINS=  # Frontend-Domain (ohne https://)
+FRONTEND_URL=      # https://your-frontend.railway.app
+```
+
+### Frontend Environment Variables
+
+```
+VITE_API_URL=https://your-backend.railway.app/api
+```
+
+### Konfigurationsdateien
+- `backend/railway.json` + `backend/nixpacks.toml` — PHP 8.4 Build + Migrate on Deploy
+- `frontend/railway.json` — Node Build + Static Serve
