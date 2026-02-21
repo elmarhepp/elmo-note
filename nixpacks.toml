@@ -1,0 +1,20 @@
+[phases.setup]
+nixPkgs = [
+  "php84",
+  "php84Extensions.pdo_pgsql",
+  "php84Extensions.pgsql",
+  "php84Extensions.mbstring",
+  "php84Extensions.xml",
+  "php84Extensions.bcmath",
+  "php84Extensions.gd",
+  "php84Extensions.tokenizer",
+  "php84Extensions.curl",
+  "php84Extensions.fileinfo",
+  "composer"
+]
+
+[phases.install]
+cmds = ["cd backend && composer install --no-dev --optimize-autoloader"]
+
+[start]
+cmd = "bash start.sh"
