@@ -28,7 +28,7 @@ class NotebookController extends Controller
 
     public function update(Request $request, Notebook $notebook): JsonResponse
     {
-        $this->authorize('update', $notebook);
+        abort_unless((int) $notebook->user_id === $request->user()->id, 403);
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -41,7 +41,7 @@ class NotebookController extends Controller
 
     public function destroy(Request $request, Notebook $notebook): JsonResponse
     {
-        $this->authorize('delete', $notebook);
+        abort_unless((int) $notebook->user_id === $request->user()->id, 403);
 
         $notebook->delete();
 

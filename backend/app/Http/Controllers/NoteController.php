@@ -45,14 +45,14 @@ class NoteController extends Controller
 
     public function show(Request $request, Note $note): JsonResponse
     {
-        $this->authorize('view', $note);
+        abort_unless((int) $note->user_id === $request->user()->id, 403);
 
         return response()->json($note->load(['notebook', 'tags']));
     }
 
     public function update(Request $request, Note $note): JsonResponse
     {
-        $this->authorize('update', $note);
+        abort_unless((int) $note->user_id === $request->user()->id, 403);
 
         $data = $request->validate([
             'title' => 'sometimes|string|max:255',
@@ -77,7 +77,7 @@ class NoteController extends Controller
 
     public function destroy(Request $request, Note $note): JsonResponse
     {
-        $this->authorize('delete', $note);
+        abort_unless((int) $note->user_id === $request->user()->id, 403);
 
         $note->delete();
 

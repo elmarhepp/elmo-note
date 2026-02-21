@@ -28,7 +28,7 @@ class TagController extends Controller
 
     public function destroy(Request $request, Tag $tag): JsonResponse
     {
-        $this->authorize('delete', $tag);
+        abort_unless((int) $tag->user_id === $request->user()->id, 403);
 
         $tag->delete();
 
