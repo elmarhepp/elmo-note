@@ -17,4 +17,4 @@ nixPkgs = [
 cmds = ["cd backend && composer install --no-dev --optimize-autoloader"]
 
 [start]
-cmd = "bash start.sh"
+cmd = "sh start.sh"
